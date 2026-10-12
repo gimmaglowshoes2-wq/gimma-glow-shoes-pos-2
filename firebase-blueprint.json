@@ -1,0 +1,120 @@
+{
+  "entities": {
+    "StaffUser": {
+      "title": "StaffUser",
+      "description": "Profil staf dan kasir terdaftar di sistem Gimma Glow Shoes",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "role": { "type": "string", "enum": ["admin", "cashier"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "CatalogItem": {
+      "title": "CatalogItem",
+      "description": "Layanan treatment sepatu dan produk retail shoe care",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "name": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string", "enum": ["service", "product", "package"] },
+        "price": { "type": "number" },
+        "costEstimate": { "type": "number" },
+        "description": { "type": "string", "maxLength": 500 },
+        "duration": { "type": "string", "maxLength": 64 },
+        "stock": { "type": "number" },
+        "badge": { "type": "string", "maxLength": 64 },
+        "iconName": { "type": "string", "maxLength": 64 },
+        "isActive": { "type": "boolean" },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "name", "category", "price", "isActive"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Transaksi kasir dan pesanan treatment sepatu pelanggan",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "invoiceNumber": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "completedAt": { "type": "string", "maxLength": 64 },
+        "pickedUpAt": { "type": "string", "maxLength": 64 },
+        "customer": { "type": "object" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "total": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["Tunai", "QRIS", "Transfer", "Debit"] },
+        "amountPaid": { "type": "number" },
+        "change": { "type": "number" },
+        "orderStatus": { "type": "string", "enum": ["Menunggu", "Diproses", "Selesai", "Diambil"] },
+        "cashierName": { "type": "string", "maxLength": 128 },
+        "cashierId": { "type": "string", "maxLength": 128 },
+        "notes": { "type": "string", "maxLength": 500 }
+      },
+      "required": ["id", "invoiceNumber", "createdAt", "customer", "items", "subtotal", "total", "paymentMethod", "orderStatus"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Pencatatan pengeluaran dan biaya operasional toko",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 32 },
+        "title": { "type": "string", "maxLength": 150 },
+        "category": { "type": "string", "maxLength": 64 },
+        "amount": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "createdBy": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["id", "date", "title", "category", "amount"]
+    },
+    "StoreProfile": {
+      "title": "StoreProfile",
+      "description": "Profil toko dan konfigurasi struk kasir",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 128 },
+        "tagline": { "type": "string", "maxLength": 150 },
+        "address": { "type": "string", "maxLength": 300 },
+        "phone": { "type": "string", "maxLength": 64 },
+        "instagram": { "type": "string", "maxLength": 64 },
+        "receiptFooterMessage": { "type": "string", "maxLength": 300 },
+        "terms": { "type": "array" },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["name", "address", "phone"]
+    }
+  },
+  "firestore": {
+    "/admins/{userId}": {
+      "schema": "StaffUser",
+      "description": "Daftar ID staf yang memiliki peran admin"
+    },
+    "/staff/{userId}": {
+      "schema": "StaffUser",
+      "description": "Daftar staf aktif dan kasir"
+    },
+    "/catalog/{itemId}": {
+      "schema": "CatalogItem",
+      "description": "Katalog tarif layanan cuci sepatu dan produk"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Data seluruh transaksi penjualan dan pesanan cuci sepatu"
+    },
+    "/expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "Data biaya operasional toko Gimma Glow Shoes"
+    },
+    "/settings/{settingId}": {
+      "schema": "StoreProfile",
+      "description": "Pengaturan profil toko Gimma Glow Shoes"
+    }
+  }
+}

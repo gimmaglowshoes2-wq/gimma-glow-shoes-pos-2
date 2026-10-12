@@ -1,0 +1,116 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default Deny All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'gimmaglowshoes2@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isStaff() {
+      return isSignedIn() && (
+        isAdmin() ||
+        exists(/databases/$(database)/documents/staff/$(request.auth.uid))
+      );
+    }
+
+    // Admin & Staff Collections
+    match /admins/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() && isValidId(userId);
+    }
+
+    match /staff/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() && isValidId(userId);
+    }
+
+    // Catalog Collection
+    function isValidCatalogItem(data) {
+      return data.keys().hasAll(['id', 'name', 'category', 'price', 'isActive'])
+        && data.id is string && data.id.size() <= 64
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 128
+        && (data.category == 'service' || data.category == 'product' || data.category == 'package')
+        && data.price is number && data.price >= 0
+        && data.isActive is bool;
+    }
+
+    match /catalog/{itemId} {
+      allow read: if isSignedIn();
+      allow create: if isStaff() && isValidId(itemId) && isValidCatalogItem(incoming());
+      allow update: if isStaff() && isValidId(itemId) && isValidCatalogItem(incoming());
+      allow delete: if isAdmin() && isValidId(itemId);
+    }
+
+    // Transactions Collection
+    function isValidTransaction(data) {
+      return data.keys().hasAll(['id', 'invoiceNumber', 'createdAt', 'customer', 'items', 'subtotal', 'total', 'paymentMethod', 'orderStatus'])
+        && data.id is string && data.id.size() <= 128
+        && data.invoiceNumber is string && data.invoiceNumber.size() <= 64
+        && data.createdAt is string && data.createdAt.size() <= 64
+        && data.items is list && data.items.size() > 0 && data.items.size() <= 100
+        && data.subtotal is number && data.subtotal >= 0
+        && data.total is number && data.total >= 0
+        && (data.paymentMethod == 'Tunai' || data.paymentMethod == 'QRIS' || data.paymentMethod == 'Transfer' || data.paymentMethod == 'Debit')
+        && (data.orderStatus == 'Menunggu' || data.orderStatus == 'Diproses' || data.orderStatus == 'Selesai' || data.orderStatus == 'Diambil')
+        && data.customer is map;
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if isSignedIn();
+      allow create: if isStaff() && isValidId(transactionId) && isValidTransaction(incoming());
+      allow update: if isStaff() && isValidId(transactionId) && isValidTransaction(incoming())
+        && incoming().invoiceNumber == existing().invoiceNumber
+        && incoming().createdAt == existing().createdAt;
+      allow delete: if isAdmin() && isValidId(transactionId);
+    }
+
+    // Expenses Collection
+    function isValidExpense(data) {
+      return data.keys().hasAll(['id', 'date', 'title', 'category', 'amount'])
+        && data.id is string && data.id.size() <= 128
+        && data.date is string && data.date.size() <= 32
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 150
+        && data.category is string && data.category.size() <= 64
+        && data.amount is number && data.amount > 0;
+    }
+
+    match /expenses/{expenseId} {
+      allow read: if isSignedIn();
+      allow create: if isStaff() && isValidId(expenseId) && isValidExpense(incoming());
+      allow update: if isStaff() && isValidId(expenseId) && isValidExpense(incoming());
+      allow delete: if isAdmin() && isValidId(expenseId);
+    }
+
+    // Store Settings
+    match /settings/{settingId} {
+      allow read: if isSignedIn();
+      allow create, update: if isAdmin() && isValidId(settingId);
+      allow delete: if false;
+    }
+  }
+}

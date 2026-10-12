@@ -1,0 +1,6 @@
+{
+  "name": "GIMMA GLOW SHOES - POS & Manajemen Cuci Sepatu",
+  "description": "Aplikasi POS kasir profesional, manajemen pesanan cuci sepatu, katalog produk, struk cetak, dan laporan keuangan untuk Gimma Glow Shoes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
